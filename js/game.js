@@ -1,4 +1,4 @@
-// Configuração inicial
+// Configuração inicial do jogo
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let gameRunning = false;
@@ -6,18 +6,24 @@ let score = 0;
 let phase = 1;
 let lives = 3;
 let gameSpeed = 3;
+let lastFrameTime = 0;
 
-// Configuração do canvas
+// Configuração do canvas responsivo
 function setupCanvas() {
-    function resize() {
+    function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         player.x = canvas.width / 2;
         player.y = canvas.height - 100;
+        
+        // Ajusta o tamanho dos elementos baseado na tela
+        const baseSize = Math.min(canvas.width, canvas.height) * 0.05;
+        player.width = baseSize * 1.5;
+        player.height = baseSize * 1.5;
     }
     
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 }
 
 // Objetos do jogo
@@ -38,13 +44,14 @@ let asteroids = [];
 let explosions = [];
 let lifeBonuses = [];
 
-// Funções de criação de objetos
+// Funções de criação de objetos otimizadas
 function createEnemy() {
-    const size = 30 + Math.random() * 20;
+    const size = 30 + Math.random() * 20 * (canvas.width / 400);
     return {
         x: Math.random() * (canvas.width - size),
         y: -size,
-        width: size, height: size,
+        width: size,
+        height: size,
         speed: 1 + Math.random() * gameSpeed,
         color: `hsl(${Math.random() * 60 + 330}, 100%, 50%)`,
         health: phase
@@ -52,12 +59,13 @@ function createEnemy() {
 }
 
 function createAsteroid() {
-    const size = 30 + Math.random() * 40;
+    const size = 30 + Math.random() * 40 * (canvas.width / 400);
     return {
         x: Math.random() * (canvas.width - size),
         y: -size,
-        width: size, height: size,
-        speed: 1 + Math.random() * gameSpeed,
+        width: size,
+        height: size,
+        speed: 1 + Math.random() * gameSpeed * 0.7,
         color: '#8e44ad',
         rotation: 0,
         rotationSpeed: (Math.random() - 0.5) * 0.1
@@ -65,10 +73,12 @@ function createAsteroid() {
 }
 
 function createLifeBonus() {
+    const size = 30 * (canvas.width / 400);
     return {
-        x: Math.random() * (canvas.width - 30),
-        y: -30,
-        width: 30, height: 30,
+        x: Math.random() * (canvas.width - size),
+        y: -size,
+        width: size,
+        height: size,
         speed: 2 + Math.random() * 2
     };
 }
@@ -90,12 +100,12 @@ function createExplosion(x, y, size) {
     };
 }
 
-// Funções de desenho
+// Sistema de desenho otimizado
 function drawPlayer() {
     ctx.save();
     ctx.fillStyle = player.color;
     
-    // Nave do jogador
+    // Desenho da nave do jogador
     ctx.beginPath();
     ctx.moveTo(player.x, player.y - player.height / 2);
     ctx.lineTo(player.x + player.width / 2, player.y + player.height / 2);
@@ -103,7 +113,7 @@ function drawPlayer() {
     ctx.closePath();
     ctx.fill();
     
-    // Efeito do motor
+    // Efeito de propulsão
     if (gameRunning) {
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
@@ -120,7 +130,9 @@ function drawPlayer() {
 function drawLaser(laser) {
     ctx.save();
     ctx.fillStyle = laser.isEnemy ? '#ff0000' : '#f1c40f';
-    ctx.fillRect(laser.x - 2, laser.y, 4, 10);
+    const laserWidth = 4 * (canvas.width / 400);
+    const laserHeight = 10 * (canvas.width / 400);
+    ctx.fillRect(laser.x - laserWidth/2, laser.y, laserWidth, laserHeight);
     ctx.restore();
 }
 
@@ -128,7 +140,6 @@ function drawEnemy(enemy) {
     ctx.save();
     ctx.fillStyle = enemy.color;
     
-    // Nave inimiga
     ctx.beginPath();
     ctx.moveTo(enemy.x + enemy.width / 2, enemy.y);
     ctx.lineTo(enemy.x + enemy.width, enemy.y + enemy.height);
@@ -136,7 +147,6 @@ function drawEnemy(enemy) {
     ctx.closePath();
     ctx.fill();
     
-    // Cabine
     ctx.fillStyle = '#3498db';
     ctx.beginPath();
     ctx.arc(enemy.x + enemy.width / 2, enemy.y + enemy.height / 3, enemy.width / 6, 0, Math.PI * 2);
@@ -153,7 +163,6 @@ function drawAsteroid(asteroid) {
     ctx.fillStyle = asteroid.color;
     ctx.beginPath();
     
-    // Forma irregular
     const points = 8;
     const radius = Math.min(asteroid.width, asteroid.height) / 2;
     
@@ -163,11 +172,8 @@ function drawAsteroid(asteroid) {
         const x = Math.cos(angle) * distance;
         const y = Math.sin(angle) * distance;
         
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
     }
     
     ctx.closePath();
@@ -179,7 +185,6 @@ function drawLifeBonus(bonus) {
     ctx.save();
     ctx.fillStyle = '#ff0000';
     
-    // Coração
     const x = bonus.x + bonus.width/2;
     const y = bonus.y + bonus.height/2;
     const size = Math.min(bonus.width, bonus.height) / 2;
@@ -203,7 +208,7 @@ function drawExplosion(explosion) {
         ctx.arc(
             Math.cos(particle.angle) * particle.speed * (50 - explosion.life),
             Math.sin(particle.angle) * particle.speed * (50 - explosion.life),
-            2, 0, Math.PI * 2
+            2 * (canvas.width / 400), 0, Math.PI * 2
         );
         ctx.fill();
     });
@@ -218,7 +223,7 @@ function drawStarfield() {
     for (let i = 0; i < 100; i++) {
         const x = Math.random() * canvas.width;
         const y = (Math.random() * canvas.height + (Date.now() * 0.05 * gameSpeed)) % canvas.height;
-        const size = Math.random() * 2;
+        const size = Math.random() * 2 * (canvas.width / 400);
         
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -231,31 +236,30 @@ function drawStarfield() {
 function drawJupiter() {
     ctx.save();
     
-    // Júpiter no fundo
     const gradient = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height * 1.5, 50,
-        canvas.width / 2, canvas.height * 1.5, 300
+        canvas.width / 2, canvas.height * 1.5, canvas.width * 0.1,
+        canvas.width / 2, canvas.height * 1.5, canvas.width * 0.6
     );
     gradient.addColorStop(0, 'rgba(200, 150, 50, 0.8)');
     gradient.addColorStop(1, 'rgba(100, 50, 0, 0)');
     
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height * 1.5, 300, 0, Math.PI * 2);
+    ctx.arc(canvas.width / 2, canvas.height * 1.5, canvas.width * 0.6, 0, Math.PI * 2);
     ctx.fill();
     
     ctx.restore();
 }
 
-// Lógica do jogo
+// Lógica do jogo otimizada
 function spawnEnemies() {
-    if (Math.random() < 0.02 && enemies.length < 5 + phase) {
+    if (Math.random() < 0.02 * (1 + phase/4) && enemies.length < 5 + phase) {
         enemies.push(createEnemy());
     }
 }
 
 function spawnAsteroids() {
-    if (Math.random() < 0.01 && asteroids.length < 3 + phase) {
+    if (Math.random() < 0.01 * (1 + phase/3) && asteroids.length < 3 + phase) {
         asteroids.push(createAsteroid());
     }
 }
@@ -266,75 +270,76 @@ function spawnLifeBonus() {
     }
 }
 
-function updatePlayer() {
+function updatePlayer(deltaTime) {
     if (player.moveLeft && player.x > player.width / 2) {
-        player.x -= player.speed;
+        player.x -= player.speed * (deltaTime / 16);
     }
     if (player.moveRight && player.x < canvas.width - player.width / 2) {
-        player.x += player.speed;
+        player.x += player.speed * (deltaTime / 16);
     }
     
-    // Atualizar lasers
-    player.lasers = player.lasers.filter(laser => laser.y > -10 && laser.y < canvas.height + 10);
-    player.lasers.forEach(laser => laser.isEnemy ? (laser.y += 8) : (laser.y -= 10));
+    player.lasers = player.lasers.filter(laser => 
+        laser.y > -20 && laser.y < canvas.height + 20
+    );
+    
+    const laserSpeed = 10 * (canvas.width / 400);
+    player.lasers.forEach(laser => {
+        laser.y += laser.isEnemy ? laserSpeed * (deltaTime / 16) : -laserSpeed * (deltaTime / 16);
+    });
 }
 
-function updateEnemies() {
+function updateGameObjects(deltaTime) {
+    // Atualiza inimigos
     enemies = enemies.filter(enemy => enemy.y < canvas.height + enemy.height);
-    
     enemies.forEach(enemy => {
-        enemy.y += enemy.speed;
+        enemy.y += enemy.speed * (deltaTime / 16);
         
-        // Inimigos atiram a partir da fase 2
         if (phase >= 2 && Math.random() < 0.005) {
             player.lasers.push({
                 x: enemy.x + enemy.width / 2,
                 y: enemy.y + enemy.height,
-                width: 4,
-                height: 10,
+                width: 4 * (canvas.width / 400),
+                height: 10 * (canvas.width / 400),
                 isEnemy: true
             });
         }
     });
-}
-
-function updateAsteroids() {
-    asteroids = asteroids.filter(asteroid => asteroid.y < canvas.height + asteroid.height);
     
+    // Atualiza asteroides
+    asteroids = asteroids.filter(asteroid => asteroid.y < canvas.height + asteroid.height);
     asteroids.forEach(asteroid => {
-        asteroid.y += asteroid.speed;
-        asteroid.rotation += asteroid.rotationSpeed;
+        asteroid.y += asteroid.speed * (deltaTime / 16);
+        asteroid.rotation += asteroid.rotationSpeed * (deltaTime / 16);
     });
-}
-
-function updateLifeBonuses() {
+    
+    // Atualiza bônus de vida
     lifeBonuses = lifeBonuses.filter(bonus => bonus.y < canvas.height + bonus.height);
-    lifeBonuses.forEach(bonus => bonus.y += bonus.speed);
-}
-
-function updateExplosions() {
+    lifeBonuses.forEach(bonus => {
+        bonus.y += bonus.speed * (deltaTime / 16);
+    });
+    
+    // Atualiza explosões
     explosions = explosions.filter(explosion => explosion.life > 0);
     explosions.forEach(explosion => explosion.life--);
 }
 
 function checkCollision(obj1, obj2) {
-    return obj1.x + obj1.width / 2 > obj2.x &&
-           obj1.x - obj1.width / 2 < obj2.x + obj2.width &&
-           obj1.y + obj1.height / 2 > obj2.y &&
-           obj1.y - obj1.height / 2 < obj2.y + obj2.height;
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
 }
 
 function checkCollisions() {
-    // Lasers do jogador atingem inimigos
+    // Colisões de lasers
     player.lasers.forEach((laser, laserIndex) => {
         if (laser.isEnemy) {
-            // Laser inimigo atinge jogador
             if (checkCollision(laser, player)) {
                 player.lasers.splice(laserIndex, 1);
                 loseLife();
             }
         } else {
-            // Laser do jogador atinge inimigos
+            // Com inimigos
             enemies.forEach((enemy, enemyIndex) => {
                 if (checkCollision(laser, enemy)) {
                     player.lasers.splice(laserIndex, 1);
@@ -353,7 +358,7 @@ function checkCollisions() {
                 }
             });
             
-            // Laser do jogador atinge asteroides
+            // Com asteroides
             asteroids.forEach((asteroid, asteroidIndex) => {
                 if (checkCollision(laser, asteroid)) {
                     player.lasers.splice(laserIndex, 1);
@@ -370,30 +375,30 @@ function checkCollisions() {
         }
     });
     
-    // Colisão do jogador com inimigos ou asteroides
-    enemies.forEach(enemy => {
+    // Colisões do jogador
+    enemies.forEach((enemy, enemyIndex) => {
         if (checkCollision(player, enemy)) {
+            enemies.splice(enemyIndex, 1);
             loseLife();
-            enemies.splice(enemies.indexOf(enemy), 1);
         }
     });
     
-    asteroids.forEach(asteroid => {
+    asteroids.forEach((asteroid, asteroidIndex) => {
         if (checkCollision(player, asteroid)) {
+            asteroids.splice(asteroidIndex, 1);
             loseLife();
-            asteroids.splice(asteroids.indexOf(asteroid), 1);
         }
     });
     
-    // Colisão com bônus de vida
-    lifeBonuses.forEach((bonus, index) => {
+    // Colisões com bônus
+    lifeBonuses.forEach((bonus, bonusIndex) => {
         if (checkCollision(player, bonus)) {
-            lifeBonuses.splice(index, 1);
+            lifeBonuses.splice(bonusIndex, 1);
             lives = Math.min(lives + 1, 5);
             explosions.push(createExplosion(
                 bonus.x + bonus.width/2,
                 bonus.y + bonus.height/2,
-                20
+                bonus.width
             ));
             updateUI();
         }
@@ -402,7 +407,7 @@ function checkCollisions() {
 
 function loseLife() {
     lives--;
-    explosions.push(createExplosion(player.x, player.y, 30));
+    explosions.push(createExplosion(player.x, player.y, player.width));
     updateUI();
     
     if (lives <= 0) {
@@ -428,7 +433,6 @@ function nextPhase() {
     player.shootDelay = Math.max(200, player.shootDelay - 50);
     player.speed += 1;
     
-    // Melhoria visual da nave
     const colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6'];
     player.color = colors[Math.min(phase - 1, colors.length - 1)];
     
@@ -467,21 +471,22 @@ function resetGame() {
     updateUI();
 }
 
-// Loop principal do jogo
-function gameLoop() {
+// Loop do jogo com deltaTime
+function gameLoop(timestamp) {
     if (!gameRunning) return;
+    
+    const deltaTime = timestamp - lastFrameTime;
+    lastFrameTime = timestamp;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     drawStarfield();
     drawJupiter();
     
-    updatePlayer();
-    updateEnemies();
-    updateAsteroids();
-    updateLifeBonuses();
-    updateExplosions();
+    updatePlayer(deltaTime);
+    updateGameObjects(deltaTime);
     checkCollisions();
+    
     spawnEnemies();
     spawnAsteroids();
     spawnLifeBonus();
@@ -496,79 +501,69 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Controles
+// Sistema de controles otimizado para mobile
 function setupControls() {
-    // Controles touch
-    document.getElementById('leftButton').addEventListener('touchstart', (e) => {
+    const leftButton = document.getElementById('leftButton');
+    const rightButton = document.getElementById('rightButton');
+    const fireButton = document.getElementById('fireButton');
+    
+    // Feedback visual para toque
+    function addTouchFeedback(button) {
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            button.style.transform = 'scale(0.9)';
+            button.style.opacity = '0.8';
+        });
+        
+        button.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            button.style.transform = 'scale(1)';
+            button.style.opacity = '1';
+        });
+    }
+    
+    addTouchFeedback(leftButton);
+    addTouchFeedback(rightButton);
+    addTouchFeedback(fireButton);
+    
+    // Controles de movimento
+    leftButton.addEventListener('touchstart', (e) => {
         e.preventDefault();
         player.moveLeft = true;
     });
     
-    document.getElementById('leftButton').addEventListener('touchend', (e) => {
+    leftButton.addEventListener('touchend', (e) => {
         e.preventDefault();
         player.moveLeft = false;
     });
     
-    document.getElementById('rightButton').addEventListener('touchstart', (e) => {
+    rightButton.addEventListener('touchstart', (e) => {
         e.preventDefault();
         player.moveRight = true;
     });
     
-    document.getElementById('rightButton').addEventListener('touchend', (e) => {
+    rightButton.addEventListener('touchend', (e) => {
         e.preventDefault();
         player.moveRight = false;
     });
     
-    document.getElementById('fireButton').addEventListener('touchstart', (e) => {
+    fireButton.addEventListener('touchstart', (e) => {
         e.preventDefault();
         shootLaser();
     });
-    // Ajuste dinâmico da posição dos botões para mobile
-function adjustControlsForMobile() {
-    const controls = document.getElementById('controls');
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    if (isMobile) {
-        controls.style.bottom = '100px'; // Ajuste para mobile
-        controls.style.padding = '0 15px';
-        
-        // Ajusta o tamanho dos botões
-        document.querySelectorAll('.controlButton').forEach(btn => {
-            btn.style.width = '60px';
-            btn.style.height = '60px';
-            btn.style.fontSize = '1.3rem';
-        });
-    }
-}
-
-// Chame esta função no initGame()
-function initGame() {
-    setupCanvas();
-    setupControls();
-    setupMenu();
-    adjustControlsForMobile(); // Adicione esta linha
-    resetGame();
-}
-    
-    // Controles de teclado
+    // Controles de teclado para teste
     document.addEventListener('keydown', (e) => {
         if (!gameRunning) return;
         
-        if (e.key === 'ArrowLeft') {
-            player.moveLeft = true;
-        } else if (e.key === 'ArrowRight') {
-            player.moveRight = true;
-        } else if (e.key === ' ') {
-            shootLaser();
-        }
+        if (e.key === 'ArrowLeft') player.moveLeft = true;
+        else if (e.key === 'ArrowRight') player.moveRight = true;
+        else if (e.key === ' ') shootLaser();
     });
     
     document.addEventListener('keyup', (e) => {
-        if (e.key === 'ArrowLeft') {
-            player.moveLeft = false;
-        } else if (e.key === 'ArrowRight') {
-            player.moveRight = false;
-        }
+        if (e.key === 'ArrowLeft') player.moveLeft = false;
+        else if (e.key === 'ArrowRight') player.moveRight = false;
     });
 }
 
@@ -578,21 +573,22 @@ function shootLaser() {
         player.lasers.push({
             x: player.x,
             y: player.y - player.height / 2,
-            width: 4,
-            height: 10,
+            width: 4 * (canvas.width / 400),
+            height: 10 * (canvas.width / 400),
             isEnemy: false
         });
         player.lastShot = now;
     }
 }
 
-// Menu
+// Menu do jogo
 function setupMenu() {
     document.getElementById('startButton').addEventListener('click', () => {
         document.getElementById('menuScreen').style.display = 'none';
         resetGame();
         gameRunning = true;
-        gameLoop();
+        lastFrameTime = performance.now();
+        requestAnimationFrame(gameLoop);
     });
     
     document.getElementById('instructionsButton').addEventListener('click', () => {
@@ -611,13 +607,39 @@ function setupMenu() {
     });
 }
 
-// Inicialização
+// Ajuste dos controles para mobile
+function adjustControlsForMobile() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        const controls = document.getElementById('controls');
+        controls.style.bottom = '15vh';
+        controls.style.gap = '20px';
+        controls.style.padding = '0 5%';
+        
+        const controlButtons = document.querySelectorAll('.controlButton');
+        const buttonSize = Math.min(canvas.width, canvas.height) * 0.12;
+        
+        controlButtons.forEach(button => {
+            button.style.width = `${buttonSize}px`;
+            button.style.height = `${buttonSize}px`;
+            button.style.fontSize = `${buttonSize * 0.4}px`;
+        });
+        
+        // Ajuste especial para o botão de tiro
+        const fireButton = document.getElementById('fireButton');
+        fireButton.style.marginRight = '5%';
+    }
+}
+
+// Inicialização completa do jogo
 function initGame() {
     setupCanvas();
     setupControls();
     setupMenu();
+    adjustControlsForMobile();
     resetGame();
 }
 
-// Inicia quando o DOM estiver pronto
+// Inicia o jogo quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', initGame);
