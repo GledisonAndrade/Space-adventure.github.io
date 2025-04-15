@@ -1,0 +1,153 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    overflow: hidden;
+    touch-action: none;
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    height: 100vh;
+    width: 100vw;
+}
+
+#gameContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#gameCanvas {
+    display: block;
+    background-color: #000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* Telas de Interface */
+#menuScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986') center/cover;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+#gameTitle {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    color: #ff0;
+    text-shadow: 0 0 10px #fff, 0 0 20px #ff0;
+    text-align: center;
+}
+
+.menuButton {
+    padding: 15px 30px;
+    margin: 10px;
+    font-size: 1.2rem;
+    background: linear-gradient(to bottom, #4a6bff, #1a3dff);
+    border: none;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s;
+    width: 200px;
+    text-align: center;
+    touch-action: manipulation;
+}
+
+.menuButton:active {
+    transform: scale(0.95);
+}
+
+#instructionsScreen, #gameOverScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    padding: 20px;
+    text-align: center;
+}
+
+#instructionsText {
+    margin-bottom: 30px;
+    max-width: 80%;
+    line-height: 1.6;
+}
+
+/* Controles */
+#controls {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 50;
+}
+
+#leftControls {
+    display: flex;
+    gap: 20px;
+}
+
+.controlButton {
+    width: 70px;
+    height: 70px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.5rem;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+#fireButton {
+    background-color: rgba(255, 0, 0, 0.5);
+}
+
+/* Informações do Jogo */
+#gameInfo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+    color: white;
+    font-size: 1rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+#developer {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 0.8rem;
+    color: #aaa;
+    z-index: 50;
+}

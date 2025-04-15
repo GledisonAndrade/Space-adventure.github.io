@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Adventure</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Telas de Interface -->
+        <div id="menuScreen">
+            <h1 id="gameTitle">SPACE ADVENTURE</h1>
+            <button class="menuButton" id="startButton">INICIAR</button>
+            <button class="menuButton" id="instructionsButton">INSTRUÇÕES</button>
+        </div>
+        
+        <div id="instructionsScreen">
+            <h2>INSTRUÇÕES</h2>
+            <div id="instructionsText">
+                <p>Use os botões da esquerda para mover sua nave.</p>
+                <p>Toque no botão ATIRAR para disparar.</p>
+                <p>Colete corações para ganhar vidas extras.</p>
+                <p>Destrua inimigos e asteroides para avançar de fase!</p>
+            </div>
+            <button class="menuButton" id="backButton">VOLTAR</button>
+        </div>
+        
+        <div id="gameOverScreen">
+            <div id="gameOverText">FIM DE JOGO</div>
+            <div id="finalScore">Pontuação: 0</div>
+            <button class="menuButton" id="restartButton">JOGAR NOVAMENTE</button>
+        </div>
+        
+        <!-- Controles do Jogo -->
+        <div id="controls">
+            <div id="leftControls">
+                <div class="controlButton" id="leftButton">←</div>
+                <div class="controlButton" id="rightButton">→</div>
+            </div>
+            <div class="controlButton" id="fireButton">ATIRAR</div>
+        </div>
+        
+        <!-- Informações do Jogo -->
+        <div id="gameInfo">
+            <div>Pontos: <span id="scoreDisplay">0</span></div>
+            <div>Fase: <span id="phaseDisplay">1</span></div>
+            <div>Vidas: <span id="livesDisplay">3</span></div>
+        </div>
+        
+        <div id="developer">Desenvolvido por GLEDISON ARRUDA ANDRADE</div>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+</html>
