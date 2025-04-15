@@ -523,6 +523,32 @@ function setupControls() {
         e.preventDefault();
         shootLaser();
     });
+    // Ajuste dinâmico da posição dos botões para mobile
+function adjustControlsForMobile() {
+    const controls = document.getElementById('controls');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        controls.style.bottom = '100px'; // Ajuste para mobile
+        controls.style.padding = '0 15px';
+        
+        // Ajusta o tamanho dos botões
+        document.querySelectorAll('.controlButton').forEach(btn => {
+            btn.style.width = '60px';
+            btn.style.height = '60px';
+            btn.style.fontSize = '1.3rem';
+        });
+    }
+}
+
+// Chame esta função no initGame()
+function initGame() {
+    setupCanvas();
+    setupControls();
+    setupMenu();
+    adjustControlsForMobile(); // Adicione esta linha
+    resetGame();
+}
     
     // Controles de teclado
     document.addEventListener('keydown', (e) => {
